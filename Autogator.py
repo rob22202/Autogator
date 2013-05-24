@@ -1,8 +1,13 @@
 #!/usr/bin/python
 
-# 99% of this code derived from Automator by TekDefense.  Thanks 1aN0rmus 
+# 99% of this code derived from Automator by 1aN0rmus from http://www.tekdefense.com/
+# This verion is made for mass ip information lookups and outputs in tabular format 
+# The original (with lots more bells and whitstles than Autogator) at https://github.com/1aN0rmus/TekDefense/blob/master/Automater.py
+# Usage: Autogator.py -i <inputfile>
+# The input file should contain a \n delimited list of ip addresses.
+# rob22202@gmail.com, rob22202 on github
 
-import csv, httplib2, re, sys, getopt, urllib, urllib2
+import httplib2, re, sys, getopt, urllib, urllib2
 
 def main(argv):
   inputfile = ''
@@ -11,12 +16,12 @@ def main(argv):
 	try:
 		opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
 	except getopt.GetoptError:
-		print 'h4shit.py -i <inputfile>'
+		print 'Autogator.py -i <inputfile>'
 		sys.exit(2)
 
 	for opt, arg in opts:
 		if opt == '-h':
-			print 'h4shit.py -i <inputfile>'
+			print 'Autogator.py -i <inputfile>'
 			sys.exit()
 		elif opt in ("-i", "--ifile"):
 			inputfile = arg
@@ -24,8 +29,8 @@ def main(argv):
 			outputfile = arg
 
 	if inputfile == "":
-		print "Usage: h4shit.py -i <inputfile>"
-		print "No input file specified"
+		print "Usage: Autogator.py -i <inputfile>"
+		print "No input file specified.  Input file should contain a \n delimited list of ip addresses."
 		print ""
 		sys.exit(2)
 	
