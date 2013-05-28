@@ -7,10 +7,12 @@
 # The input file should contain a \n delimited list of ip addresses.
 # rob22202@gmail.com, rob22202 on github
 
-import httplib2, re, sys, getopt, urllib, urllib2
+# Updated 05/28/2013 - Addded Reverse DNS
+
+import socket, csv, httplib2, re, sys, getopt, urllib, urllib2
 
 def main(argv):
-  inputfile = ''
+	inputfile = ''
 	outputfile = ''
 	
 	try:
@@ -30,7 +32,7 @@ def main(argv):
 
 	if inputfile == "":
 		print "Usage: Autogator.py -i <inputfile>"
-		print "No input file specified.  Input file should contain a \n delimited list of ip addresses."
+		print "No input file specified"
 		print ""
 		sys.exit(2)
 	
@@ -39,14 +41,22 @@ def main(argv):
 
 	input_file = csv.reader(open(inputfile, 'r'),delimiter='\t')
 
-	for input_row in input_file:
-		ipInput = input_row[0]
-		a_records = robtex(ipInput)
-		category = fortiURL(ipInput)
-		blacklist = str(ipvoid_blacklist(ipInput))
-		isp = ipvoid_isp(ipInput)
-		geo = ipvoid_geo(ipInput)
-		print ipInput + "|" + a_records + "|" + category + "|" + blacklist + "|" + isp + "|" + geo
+        for input_row in input_file:
+                ipInput = input_row[0]
+                reverse = reverse_dns(ipInput)
+                a_records = robtex(ipInput)
+                category = fortiURL(ipInput)
+                blacklist = str(ipvoid_blacklist(ipInput))
+                isp = ipvoid_isp(ipInput)
+                geo = ipvoid_geo(ipInput)
+                print ipInput + "|" + reverse  + "|" + a_records + "|" + category + "|" + blacklist + "|" + isp + "|" + geo
+
+def reverse_dns(ipInput):
+        try:
+                reverse_info = socket.gethostbyaddr(ipInput)
+                return reverse_info[0]
+        except:
+                return "None Found"
 
 def robtex(ipInput):   
 	proxy = urllib2.ProxyHandler()
@@ -59,7 +69,7 @@ def robtex(ipInput):
 	rpdSorted=sorted(rpdFind)
 	i=''
 	if len(rpdSorted) == 0:
-		return "None"
+		return "None Found"
 	elif len(rpdSorted) == 1:
 		for i in rpdSorted:
 			return str(i)
@@ -79,7 +89,7 @@ def fortiURL(ipInput):
 	for m in rpdSorted:
 		return m
 	if m =='':
-		return ('No Data')
+		return ('None Found')
 
 def ipvoid_blacklist(ipInput):
 	proxy = urllib2.ProxyHandler()
@@ -90,7 +100,7 @@ def ipvoid_blacklist(ipInput):
 	rpderr = re.compile('An\sError\soccurred', re.IGNORECASE)
 	rpdFinderr = re.findall(rpderr,contentString)
 	if "ERROR" in str(rpdFinderr):
-		return "NoData"
+		return "None Found"
 	else:
 		rpd = re.compile('Detected\<\/font\>\<\/td..td..a.rel..nofollow..href.\"(.{6,70})\"\stitle\=\"View', re.IGNORECASE)
 		rpdFind = re.findall(rpd,contentString)
@@ -98,9 +108,9 @@ def ipvoid_blacklist(ipInput):
 		if rpdSorted != "":
 			for i in rpdSorted:
 				if i != '':
-					return 'Blacklists: '+ str(i)
+					return str(i)
 				else:
-					return 'N/A'
+					return 'None Found'
 
 def ipvoid_isp(ipInput):
 	proxy = urllib2.ProxyHandler()
@@ -111,7 +121,7 @@ def ipvoid_isp(ipInput):
 	rpderr = re.compile('An\sError\soccurred', re.IGNORECASE)
 	rpdFinderr = re.findall(rpderr,contentString)
 	if "ERROR" in str(rpdFinderr):
-		return "NoData"
+		return "None Found"
 	else:
 		rpd = re.compile('ISP\<\/td\>\<td\>(.+)\<\/td\>', re.IGNORECASE)
 		rpdFind = re.findall(rpd,contentString)
@@ -121,7 +131,7 @@ def ipvoid_isp(ipInput):
 				if i != '':
 					return str(i)
 				else:
-					return 'N/A'
+					return 'None Found'
 
 def ipvoid_geo(ipInput):
 	proxy = urllib2.ProxyHandler()
@@ -132,7 +142,7 @@ def ipvoid_geo(ipInput):
 	rpderr = re.compile('An\sError\soccurred', re.IGNORECASE)
 	rpdFinderr = re.findall(rpderr,contentString)
 	if "ERROR" in str(rpdFinderr):
-		return "NoData"
+		return "None Found"
 	else:
 		rpd = re.compile('Country\sCode.+flag\"\s\/\>\s(.+)\<\/td\>', re.IGNORECASE)
 		rpdFind = re.findall(rpd,contentString)
@@ -142,7 +152,7 @@ def ipvoid_geo(ipInput):
 				if i != '':
 					return str(i)
 				else:
-					return 'N/A'
+					return 'None Found'
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
