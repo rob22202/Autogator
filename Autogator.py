@@ -18,12 +18,12 @@ def main(argv):
 	try:
 		opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
 	except getopt.GetoptError:
-		print 'Autogator.py -i <inputfile>'
+		print 'h4shit.py -i <inputfile>'
 		sys.exit(2)
 
 	for opt, arg in opts:
 		if opt == '-h':
-			print 'Autogator.py -i <inputfile>'
+			print 'h4shit.py -i <inputfile>'
 			sys.exit()
 		elif opt in ("-i", "--ifile"):
 			inputfile = arg
@@ -31,7 +31,7 @@ def main(argv):
 			outputfile = arg
 
 	if inputfile == "":
-		print "Usage: Autogator.py -i <inputfile>"
+		print "Usage: h4shit.py -i <inputfile>"
 		print "No input file specified"
 		print ""
 		sys.exit(2)
@@ -43,20 +43,13 @@ def main(argv):
 
         for input_row in input_file:
                 ipInput = input_row[0]
-                reverse = reverse_dns(ipInput)
+                reverse = ipvoid_reverse_dns(ipInput)
                 a_records = robtex(ipInput)
                 category = fortiURL(ipInput)
                 blacklist = str(ipvoid_blacklist(ipInput))
                 isp = ipvoid_isp(ipInput)
                 geo = ipvoid_geo(ipInput)
                 print ipInput + "|" + reverse  + "|" + a_records + "|" + category + "|" + blacklist + "|" + isp + "|" + geo
-
-def reverse_dns(ipInput):
-        try:
-                reverse_info = socket.gethostbyaddr(ipInput)
-                return reverse_info[0]
-        except:
-                return "None Found"
 
 def robtex(ipInput):   
 	proxy = urllib2.ProxyHandler()
@@ -90,6 +83,27 @@ def fortiURL(ipInput):
 		return m
 	if m =='':
 		return ('None Found')
+
+def ipvoid_reverse_dns(ipInput):
+        proxy = urllib2.ProxyHandler()
+        opener = urllib2.build_opener(proxy)
+        response = opener.open("http://ipvoid.com/scan/" + ipInput)
+        content = response.read()
+        contentString = str(content)
+        rpderr = re.compile('An\sError\soccurred', re.IGNORECASE)
+        rpdFinderr = re.findall(rpderr,contentString)
+        if "ERROR" in str(rpdFinderr):
+                return "None Found"
+        else:
+                rpd = re.compile('Reverse\ DNS\<\/td\>\<td\>(.+)\<\/td\>', re.IGNORECASE)
+                rpdFind = re.findall(rpd,contentString)
+                rpdSorted=sorted(rpdFind)
+                if rpdSorted != "":
+                        for i in rpdSorted:
+                                if i != '':
+                                        return str(i)
+                                else:
+                                        return 'None Found'
 
 def ipvoid_blacklist(ipInput):
 	proxy = urllib2.ProxyHandler()
@@ -156,3 +170,4 @@ def ipvoid_geo(ipInput):
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
+
