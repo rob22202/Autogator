@@ -7,7 +7,8 @@
 # The input file should contain a \n delimited list of ip addresses.
 # rob22202@gmail.com, rob22202 on github
 
-# Updated 05/28/2013 - Addded Reverse DNS
+# Updated 05/28/2013 - Addded reverse DNS
+# Updated 05/30/2013 - Changed reverse DNS lookup to use IPVoid to avoid direct (detectable) NS queries
 
 import socket, csv, httplib2, re, sys, getopt, urllib, urllib2
 
@@ -37,9 +38,18 @@ def main(argv):
 		sys.exit(2)
 	
 	print ""
-	print "Looking up ip addresses in:  " + inputfile
+	print "Looking up ip addresses in: " + inputfile
+	
+	header = "ip|reverse|a_records|category|blacklist|isp|geo"
 
-	input_file = csv.reader(open(inputfile, 'r'),delimiter='\t')
+	if outputfile != "":
+		print "Writing reults to: " + outputfile
+		with open(outputfile, 'a') as o:
+			print >> o, header
+
+	print header
+
+	input_file = csv.reader(open(inputfile, 'r'),delimiter='\t')	
 
         for input_row in input_file:
                 ipInput = input_row[0]
@@ -49,8 +59,11 @@ def main(argv):
                 blacklist = str(ipvoid_blacklist(ipInput))
                 isp = ipvoid_isp(ipInput)
                 geo = ipvoid_geo(ipInput)
-                print ipInput + "|" + reverse  + "|" + a_records + "|" + category + "|" + blacklist + "|" + isp + "|" + geo
-
+                output = ipInput + "|" + reverse  + "|" + a_records + "|" + category + "|" + blacklist + "|" + isp + "|" + geo
+		print output
+		if outputfile != "":
+			with open(outputfile, 'a') as o:
+				print >> o, output
 def robtex(ipInput):   
 	proxy = urllib2.ProxyHandler()
 	opener = urllib2.build_opener(proxy)
@@ -170,4 +183,3 @@ def ipvoid_geo(ipInput):
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
-
